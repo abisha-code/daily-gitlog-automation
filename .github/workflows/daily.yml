@@ -1,0 +1,31 @@
+name: Daily Auto Commit
+
+on:
+  schedule:
+    - cron: '0 18 * * *'   # runs daily at 18:00 UTC — adjust to your timezone
+  workflow_dispatch:        # lets you trigger it manually too
+
+jobs:
+  auto-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run daily script
+        run: python scripts/daily_update.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add activity_log.md
+          git diff --staged --quiet || git commit -m "Daily auto-update: $(date +'%Y-%m-%d')"
+          git push
